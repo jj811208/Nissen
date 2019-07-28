@@ -26,7 +26,7 @@ const synth = new Tone.Sampler(mapPitch, function() {
 const PitchDetector = props => {
   const [pitch, setPitch] = useState("-");
   const [note, setNote] = useState("-");
-  const [isCatchVoice, setIsCatchVoice] = useState(false);
+  const isCatchVoice = useRef(false);
   const rafID = useRef(null);
   const audioContext = useRef(new AudioContext());
   const analyser = useRef(audioContext.current.createAnalyser());
@@ -43,7 +43,7 @@ const PitchDetector = props => {
   const AMDFDetector = useMemo(Amdf, []);
 
   const updatePitch = () => {
-    console.log(isCatchVoice,'為什麼是false');
+    console.log(isCatchVoice.current,'為什麼是false');
     analyser.current.getFloatTimeDomainData(buf.current);
     const ac = AMDFDetector(buf.current);
     const myNote = util.noteFromPitch(ac) + 13;
@@ -57,7 +57,7 @@ const PitchDetector = props => {
       setNote(myNote);
       setPitch(myPitch);
 
-      if (isCatchVoice) {
+      if (isCatchVoice.current) {
         allVoiceArray.push({ pitch: myPitch, time: new Date().getTime() });
         allVoice[myPitch] = !!allVoice[myPitch] ? allVoice[myPitch] + 1 : 1;
       }
@@ -105,7 +105,7 @@ const PitchDetector = props => {
   };
 
   const toggleCatchVoice = () => {
-    if (isCatchVoice) {
+    if (isCatchVoice.current) {
       // var testVoice = [
       //   { pitch: "D#3", time: 1561816362788 },
       //   { pitch: "D#3", time: 1561816362815 },
@@ -222,14 +222,14 @@ const PitchDetector = props => {
 
       allVoice = {};
       allVoiceArray = [];
-      setIsCatchVoice(false);
+      isCatchVoice.current=false;
       console.log('setIsCatchVoice(false);')
       setTimeout(() => {
         cancelAnimationFrame(rafID.current);
         rafID.current=requestAnimationFrame(updatePitch);
       }, 200);
     } else {
-      setIsCatchVoice(true);
+      isCatchVoice.current=true;
       console.log('setIsCatchVoice(true);')
       setTimeout(() => {
         cancelAnimationFrame(rafID.current);
@@ -316,9 +316,9 @@ const PitchDetector = props => {
           marginTop: "8px"
         }}
       >
-        {isCatchVoice ? "  演奏  " : "人聲轉樂器錄製"}
+        {isCatchVoice.current ? "  演奏  " : "人聲轉樂器錄製"}
       </div>
-      <div>isCatchVoice:{isCatchVoice ? "TRUE" : "FALSE"}</div>
+      <div>isCatchVoice:{isCatchVoice.current ? "TRUE" : "FALSE"}</div>
       <div>note:{note}</div>
       <div>pitch:{pitch}</div>
     </>
