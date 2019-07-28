@@ -108,7 +108,7 @@ const PitchDetector = props => {
           ? j - diffPitchCount
           : catchedVoice.length - 1;
 
-      //一個音持續了多久
+      //一個音持續了多久 
       var PitchKeepSecond =
         (catchedVoice[targetPitchNumber].time - catchedVoice[i].time) / 1000;
 
