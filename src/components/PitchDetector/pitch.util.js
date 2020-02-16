@@ -82,7 +82,9 @@ const centsOffFromPitch = (frequency, note) => {
 };
 
 const keyFromNote = note => {
+  if(note>0 && note<10000)
   return noteStrings[note % 12] + scaleStrings[Math.floor(note / 12)];
+  else return null
 };
 
 const getUserMedia = (dictionary, callback, handleError) => {
