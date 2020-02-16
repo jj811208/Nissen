@@ -4,8 +4,6 @@ import Amdf from "./amdfDetector.js";
 import * as util from "./pitch.util";
 import Tone from "tone";
 // import MIDI from "@tonejs/midi";
-let allVoice = {};
-let allVoiceArray = [];
 
 const requestAnimationFrame =
   window.requestAnimationFrame ||
@@ -27,9 +25,11 @@ const PitchDetector = props => {
   const [note, setNote] = useState("-");
   const [isRecord, setIsRecord] = useState(false);
   const isCatchVoice = useRef(false);
-  const rafID = useRef(null);
+  const allVoice = useRef({});
+  const allVoiceArray = useRef([]);
   const audioContext = useRef(new AudioContext());
   const analyser = useRef(null);
+  const rafID = useRef(null);
   const buf = useRef(new Float32Array(1024));
   const AMDFDetector = useMemo(Amdf, []);
 
@@ -79,9 +79,9 @@ const PitchDetector = props => {
 
   const toggleCatchVoice = () => {
     if (isCatchVoice.current) {
-      playTheCatchVoice(allVoiceArray);
-      allVoice = {};
-      allVoiceArray = [];
+      playTheCatchVoice(allVoiceArray.current);
+      allVoice.current = {};
+      allVoiceArray.current = [];
       isCatchVoice.current = false;
       setNote(",");
     } else {
@@ -91,8 +91,8 @@ const PitchDetector = props => {
   };
 
   const playTheCatchVoice = catchedVoice => {
-    var voiceCat = [];
-    var allowWrongLimit = 6;
+    let voiceCat = [];
+    let allowWrongLimit = 6;
 
     for (var i = 0; i < catchedVoice.length; i++) {
       let diffPitchCount = 0;
@@ -103,13 +103,13 @@ const PitchDetector = props => {
         if (diffPitchCount >= allowWrongLimit) break;
       }
 
-      var targetPitchNumber =
+      let targetPitchNumber =
         j - diffPitchCount <= catchedVoice.length - 1
           ? j - diffPitchCount
           : catchedVoice.length - 1;
 
       //一個音持續了多久 
-      var PitchKeepSecond =
+      let PitchKeepSecond =
         (catchedVoice[targetPitchNumber].time - catchedVoice[i].time) / 1000;
 
       voiceCat.push({
@@ -120,8 +120,8 @@ const PitchDetector = props => {
 
       i = targetPitchNumber;
     }
-    var newCat = [];
-    var prevCount = 0;
+    const newCat = [];
+    let prevCount = 0;
     voiceCat.forEach((v, i) => {
       if (v.count < allowWrongLimit) {
         prevCount++;
@@ -135,11 +135,11 @@ const PitchDetector = props => {
     });
     console.log(newCat);
 
-    var allTime = 0;
+    let allTime = 0;
     const now = Tone.now() + 1;
     newCat.forEach((v, i) => {
-      synth.triggerAttackRelease(v.pitch, v.sec, 0.5 + (allTime + 0.001) + now);
-      allTime += v.sec + 0.001;
+      synth.triggerAttackRelease(v.pitch, v.sec, allTime + now);
+      allTime += v.sec ;
     });
   };
 
@@ -158,8 +158,8 @@ const PitchDetector = props => {
       setPitch(myPitch);
 
       if (isCatchVoice.current) {
-        allVoiceArray.push({ pitch: myPitch, time: new Date().getTime() });
-        allVoice[myPitch] = !!allVoice[myPitch] ? allVoice[myPitch] + 1 : 1;
+        allVoiceArray.current.push({ pitch: myPitch, time: new Date().getTime() });
+        allVoice.current[myPitch] = !!allVoice.current[myPitch] ? allVoice.current[myPitch] + 1 : 1;
       }
     }
 
